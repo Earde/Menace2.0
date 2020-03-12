@@ -1,34 +1,68 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Menace2._0
 {
     class Installer
     {
+        string boardPath = AppDomain.CurrentDomain.BaseDirectory + @"\menaceBoards.txt";
+        string turnMappingPath = AppDomain.CurrentDomain.BaseDirectory + @"\menaceTurnMap.txt";
+        JsonSerializerSettings jsonSettings = new JsonSerializerSettings{ TypeNameHandling = TypeNameHandling.All };
+
         //tree maken
         public List<string> boards = new List<string>() { "NNNNNNNNN" };//lijst met alle speelborden
-        private Dictionary<int, List<int>> nextTurnMap = new Dictionary<int, List<int>>();//<index speelbord, indexes van speelborden die daarop volgen>
+        private Dictionary<int, List<int>> nextBoardMapping = new Dictionary<int, List<int>>();//<index speelbord, indexes van speelborden die daarop volgen>
+
+        private bool NeedInit()
+        {
+            if (File.Exists(boardPath) && File.Exists(turnMappingPath))
+            {
+                Console.WriteLine("Loading...");
+                string boardJson = File.ReadAllText(boardPath);
+                boards = (List<string>)JsonConvert.DeserializeObject(boardJson, jsonSettings);
+                string turnMappingJson = File.ReadAllText(turnMappingPath);
+                nextBoardMapping = (Dictionary<int, List<int>>)JsonConvert.DeserializeObject(turnMappingJson, jsonSettings);
+                return false;
+            }
+            return true;
+        }
+
+        private void Save()
+        {
+            Console.WriteLine("Saving boards...");
+            string boardJson = JsonConvert.SerializeObject(boards, jsonSettings);
+            File.WriteAllText(boardPath, boardJson);
+            string turnMappingJson = JsonConvert.SerializeObject(nextBoardMapping, jsonSettings);
+            File.WriteAllText(turnMappingPath, turnMappingJson);
+            Console.WriteLine("Saved to " + AppDomain.CurrentDomain.BaseDirectory);
+        }
 
         public void Run()
         {
-            Console.WriteLine("Installing boards...");
-            //maak een leeg bord
-            char[] board = new char[9];
-            for (int i = 0; i < 9; i++)
+            if (NeedInit())
             {
-                board[i] = 'N';
+                Console.WriteLine("Installing boards...");
+                //maak een leeg bord
+                char[] board = new char[9];
+                for (int i = 0; i < 9; i++)
+                {
+                    board[i] = 'N';
+                }
+                //begin met spelposities vinden (probeert alle mogelijkheden d.m.v. backtracking)
+                RecursiveRun(board, 'X', 0, 0);
+                Console.WriteLine("Total generated boards: " + boards.Count);
+                Save();
             }
-            //begin met spelposities vinden (probeert alle mogelijkheden d.m.v. backtracking)
-            RecursiveRun(board, 'X', 0, 0);
-            Console.WriteLine("Total generated boards: " + boards.Count);
         }
 
         public List<int> GetNextBoards(string board)
         {
             int index = Exists(board);
-            if (nextTurnMap.ContainsKey(index))
+            if (nextBoardMapping.ContainsKey(index))
             {
-                return nextTurnMap[index];
+                return nextBoardMapping[index];
             }
             else
             {
@@ -38,6 +72,7 @@ namespace Menace2._0
 
         private void RecursiveRun(char[] board, char pos, int turn, int prevBoardIndex)
         {
+            if (boards.Count == 627 && nextBoardMapping.Count == 577) return;
             for (int i = 0; i < 9; i++)
             {
                 if (board[i] == 'N')
@@ -52,16 +87,16 @@ namespace Menace2._0
                             existing = boards.Count;
                             boards.Insert(existing, new string(board));
                         }
-                        if (nextTurnMap.ContainsKey(prevBoardIndex))
+                        if (nextBoardMapping.ContainsKey(prevBoardIndex))
                         {
-                            if (!nextTurnMap[prevBoardIndex].Contains(existing))
+                            if (!nextBoardMapping[prevBoardIndex].Contains(existing))
                             {
-                                nextTurnMap[prevBoardIndex].Add(existing);
+                                nextBoardMapping[prevBoardIndex].Add(existing);
                             }
                         }
                         else
                         {
-                            nextTurnMap.Add(prevBoardIndex, new List<int> { existing });
+                            nextBoardMapping.Add(prevBoardIndex, new List<int> { existing });
                         }
                         RecursiveRun(board, pos == 'X' ? 'O' : 'X', turn, existing);
                     }

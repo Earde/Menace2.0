@@ -8,7 +8,6 @@ namespace Menace2._0
     class Trainer
     {
         int trainGames = 1000; //aantal spellen om te trainen
-
         Installer installer = new Installer();
         Dictionary<int, int> pointMap = new Dictionary<int, int>();//<index speelbord, score>
         Random rand = new Random();
@@ -49,10 +48,15 @@ namespace Menace2._0
                 PlayGame();
             }
             Console.WriteLine("Done training.");
-            //foreach (KeyValuePair<int, int> pointsBoard in pointMap.OrderBy(x => x.Value))
-            //{
-            //    Console.WriteLine(installer.boards[pointsBoard.Key] + " " + pointsBoard.Value);
-            //}
+            Console.Write("Print output? (y/n) ");
+            string get = Console.ReadLine();
+            if (get.ToLower().Equals("y"))
+            {
+                foreach (KeyValuePair<int, int> pointsBoard in pointMap.OrderBy(x => x.Value))
+                {
+                    Console.WriteLine(installer.boards[pointsBoard.Key] + " " + pointsBoard.Value);
+                }
+            }
         }
 
         public string GetBestBoard(string board)
@@ -63,7 +67,7 @@ namespace Menace2._0
             }
             if (CanWin(board))
             {
-                return "Good luck!";
+                return "Winnable?";
             }
             List<int> indexes = installer.GetNextBoards(board);
             int score = 0;
@@ -78,7 +82,7 @@ namespace Menace2._0
             }
             if (index == -1)
             {
-                return "Good luck!";
+                return "Winnable?";
             } else
             {
                 return installer.boards[index];
