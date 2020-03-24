@@ -19,7 +19,7 @@ namespace Menace2._0
         {
             if (File.Exists(boardPath) && File.Exists(turnMappingPath))
             {
-                Console.WriteLine("Loading...");
+                Console.WriteLine("Loading up saved boards...");
                 string boardJson = File.ReadAllText(boardPath);
                 boards = (List<string>)JsonConvert.DeserializeObject(boardJson, jsonSettings);
                 string turnMappingJson = File.ReadAllText(turnMappingPath);
@@ -44,6 +44,7 @@ namespace Menace2._0
             if (NeedInit())
             {
                 Console.WriteLine("Installing boards...");
+                Console.WriteLine("This will take some time.");
                 //maak een leeg bord
                 char[] board = new char[9];
                 for (int i = 0; i < 9; i++)
@@ -55,6 +56,7 @@ namespace Menace2._0
                 Console.WriteLine("Generated " + boards.Count + " board and " + nextBoardMapping.Count + " next turn mappings.");
                 Save();
             }
+            Console.WriteLine("");
         }
 
         public List<int> GetNextBoards(string board)

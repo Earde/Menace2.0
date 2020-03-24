@@ -6,7 +6,8 @@ namespace Menace2._0
 {
     class Trainer
     {
-        int winPoints = 3, losePoints = 3, drawPoints = 2;
+        int winPointsX = 3, losePointsX = -3, drawPointsX = 1;
+        int winPointsO = 1, losePointsO = -1, drawPointsO = 5;
         private Dictionary<int, int> pointMap = new Dictionary<int, int>();//<index speelbord, score>
 
         public Installer installer;
@@ -25,19 +26,19 @@ namespace Menace2._0
                 int turn = (Turn(installer.boards[i]) + 1) / 2;
                 if (turn == 1)
                 {
-                    initialScore = 4;
+                    initialScore = 100000;
                 } 
                 else if (turn == 2)
                 {
-                    initialScore = 3;
+                    initialScore = 100000;
                 }
                 else if (turn == 3)
                 {
-                    initialScore = 2;
+                    initialScore = 100000;
                 }
                 else if (turn == 4)
                 {
-                    initialScore = 1;
+                    initialScore = 100000;
                 }
                 pointMap.Add(i, initialScore);
             }
@@ -51,7 +52,7 @@ namespace Menace2._0
             }
         }
 
-        public string GetBestBoard(string board)
+        public string GetBestBoard(string board, bool print)
         {
             if (board.Length != 9)
             {
@@ -68,6 +69,12 @@ namespace Menace2._0
             List<int> indexes = installer.GetNextBoards(board);
             int score = 0;
             int index = -1;
+            if (print && indexes.Count > 0)
+            {
+                Console.WriteLine("NEXT POSSIBLE BOARDS");
+                indexes.OrderBy(i => pointMap[i]).ToList().ForEach(ind => Console.WriteLine(this.installer.boards[ind] + " " + pointMap[ind].ToString()));
+                Console.WriteLine(" ");
+            }
             foreach (int i in indexes)
             {
                 if (pointMap[i] > score)
@@ -145,8 +152,8 @@ namespace Menace2._0
                     {
                         usedOBoards.Add(nextBoard);
                     }
-                    turn++;
                 }
+                turn++;
             }
         }
 
@@ -166,18 +173,18 @@ namespace Menace2._0
             //Update de punten voor de gespeelde velden
             if (result == 'N')
             {
-                xScore = drawPoints;
-                oScore = drawPoints;
+                xScore = drawPointsX;
+                oScore = drawPointsO;
             }
             else if (result == 'X')
             {
-                xScore = winPoints;
-                oScore = -losePoints;
+                xScore = winPointsX;
+                oScore = losePointsO;
             }
             else if (result == 'O')
             {
-                xScore = -losePoints;
-                oScore = winPoints;
+                xScore = losePointsX;
+                oScore = winPointsO;
             }
             foreach (int index in xBoards)
             {

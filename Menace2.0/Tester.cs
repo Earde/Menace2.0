@@ -9,15 +9,17 @@ namespace Menace2._0
     class Tester
     {
         Trainer trainer;
-        int testGames = 100;
-        string firstPath = AppDomain.CurrentDomain.BaseDirectory + @"\firstBoards.csv";
-        string secondPath = AppDomain.CurrentDomain.BaseDirectory + @"\secondBoards.csv";
+        int testGames;
+        string firstPath, secondPath;
         List<TestRun> menaceFirst = new List<TestRun>();
         List<TestRun> menaceSecond = new List<TestRun>();
 
-        public Tester(Trainer trainer)
+        public Tester(Trainer trainer, int testGames, int everyXGames)
         {
             this.trainer = trainer;
+            this.testGames = testGames;
+            this.firstPath = AppDomain.CurrentDomain.BaseDirectory + @"\menaceFirstStatsEvery" + everyXGames.ToString() + "Rounds.csv";
+            this.secondPath = AppDomain.CurrentDomain.BaseDirectory + @"\menaceSecondStatsEvery" + everyXGames.ToString() + "Rounds.csv";
         }
 
         public void Run()
@@ -29,21 +31,22 @@ namespace Menace2._0
         public void CreateCsv()
         {
             var csv = new StringBuilder();
-            csv.AppendLine("win,draw,lose");
+            csv.AppendLine("win;draw;lose");
             var allLines = (from tr in menaceFirst select new object[] {
                 tr.win, tr.draw, tr.lose
             }).ToList();
-            allLines.ForEach(line => csv.AppendLine(string.Join(",", line)));
+            allLines.ForEach(line => csv.AppendLine(string.Join(";", line)));
             File.WriteAllText(firstPath, csv.ToString());
 
             csv = new StringBuilder();
-            csv.AppendLine("win,draw,lose");
+            csv.AppendLine("win;draw;lose");
             allLines = (from tr in menaceSecond
                             select new object[] {
                 tr.win, tr.draw, tr.lose
             }).ToList();
-            allLines.ForEach(line => csv.AppendLine(string.Join(",", line)));
+            allLines.ForEach(line => csv.AppendLine(string.Join(";", line)));
             File.WriteAllText(secondPath, csv.ToString());
+            Console.WriteLine("Test stats saved to " + AppDomain.CurrentDomain.BaseDirectory);
         }
 
         public void PrintOutput()
@@ -78,7 +81,7 @@ namespace Menace2._0
                     }
                     if (turn % 2 == playFor)
                     {
-                        board = trainer.GetBestBoard(board);
+                        board = trainer.GetBestBoard(board, false);
                     }
                     else
                     {
