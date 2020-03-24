@@ -1,31 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 
 namespace Menace2._0
 {
     class Trainer
     {
-        int trainGames = 1000; //aantal spellen om te trainen
-        Installer installer = new Installer();
-        Dictionary<int, int> pointMap = new Dictionary<int, int>();//<index speelbord, score>
-        Random rand = new Random();
+        int winPoints = 3, losePoints = 3, drawPoints = 2;
+        private Dictionary<int, int> pointMap = new Dictionary<int, int>();//<index speelbord, score>
 
-        private void Init()
+        public Installer installer;
+        public Random rand = new Random();
+
+        public Trainer(Installer installer)
         {
-            installer.Run();
+            this.installer = installer;
+        }
+
+        public void Init()
+        {
             for (int i = 0; i < installer.boards.Count; i++)
             {
                 int initialScore = 0;
                 int turn = (Turn(installer.boards[i]) + 1) / 2;
                 if (turn == 1)
                 {
-                    initialScore = 8;
+                    initialScore = 4;
                 } 
                 else if (turn == 2)
                 {
-                    initialScore = 4;
+                    initialScore = 3;
                 }
                 else if (turn == 3)
                 {
@@ -39,23 +43,11 @@ namespace Menace2._0
             }
         }
 
-        public void Run()
+        public void PrintOutput()
         {
-            Init();
-            Console.WriteLine("Training " + trainGames.ToString() + " Games...");
-            for (int i = 0; i < trainGames; i++)
+            foreach (KeyValuePair<int, int> pointsBoard in pointMap.OrderBy(x => x.Value))
             {
-                PlayGame();
-            }
-            Console.WriteLine("Done training.");
-            Console.Write("Print output? (y/n) ");
-            string get = Console.ReadLine();
-            if (get.ToLower().Equals("y"))
-            {
-                foreach (KeyValuePair<int, int> pointsBoard in pointMap.OrderBy(x => x.Value))
-                {
-                    Console.WriteLine(installer.boards[pointsBoard.Key] + " " + pointsBoard.Value);
-                }
+                Console.WriteLine(installer.boards[pointsBoard.Key] + " " + pointsBoard.Value);
             }
         }
 
@@ -63,11 +55,15 @@ namespace Menace2._0
         {
             if (board.Length != 9)
             {
-                return "Invalid input.";
+                return "???????????????";
             }
-            if (CanWin(board))
+            if (installer.HasWinner(board) != 'N') return board;
+            int winningMove = HasWinningMove(board);
+            if (winningMove > -1)
             {
-                return "Winnable?";
+                char[] win = board.ToCharArray();
+                win[winningMove] = Turn(board) % 2 == 0 ? 'X' : 'O';
+                return new string(win);
             }
             List<int> indexes = installer.GetNextBoards(board);
             int score = 0;
@@ -82,14 +78,23 @@ namespace Menace2._0
             }
             if (index == -1)
             {
-                return "Winnable?";
+                char[] draw = board.ToCharArray();
+                for (int i = 0; i < draw.Length; i++)
+                {
+                    if (draw[i] == 'N')
+                    {
+                        draw[i] = Turn(board) % 2 == 0 ? 'X' : 'O';
+                        break;
+                    }
+                }
+                return new string(draw);
             } else
             {
                 return installer.boards[index];
             }
         }
 
-        private bool CanWin(string board)
+        public int HasWinningMove(string board)
         {
             char[] b = board.ToCharArray();
             for (int i = 0; i < board.Length; i++)
@@ -100,66 +105,47 @@ namespace Menace2._0
                     char w = installer.HasWinner(new string(b));
                     if (w != 'N')
                     {
-                        return true;
+                        return i;
                     }
                     b[i] = 'N';
                 }
             }
-            return false;
+            return -1;
         }
 
-        private void PlayGame()
+        public void PlayTrainGame()
         {
             string board = "NNNNNNNNN";
-            bool playing = true;
             List<int> usedXBoards = new List<int>();
             List<int> usedOBoards = new List<int>();
             int turn = 0;
-            while (playing)
+            while (true)
             {
                 int nextBoard = -1;
-                if (!CanWin(board))//kijk of er een winnende move is
+                List<int> nextBoards = installer.GetNextBoards(board);//kies een random bord
+                if (HasWinningMove(board) == -1 && nextBoards.Count > 0)//kijk of er een winnende move is
                 {
-                    //krijg alle mogelijke volgende borden
-                    List<int> nextBoards = installer.GetNextBoards(board);
-                    int score = 0;
-                    //tel de scores bij elkaar op
-                    foreach (int index in nextBoards)
-                    {
-                        score += pointMap[index];
-                    }
-                    //pak een random speelbord (hogere score heeft meer kans om gekozen te worden)
-                    int random = rand.Next(1, score + 1);
-                    score = 0;
-                    foreach (int index in nextBoards)
-                    {
-                        score += pointMap[index];
-                        if (score >= random)
-                        {
-                            nextBoard = index;
-                            break;
-                        }
-                    }
+                    nextBoard = nextBoards[rand.Next(0, nextBoards.Count)];
                 }
                 //Als er geen volgend speelbord gevonden is resulteert de volgende zet sowieso in winst of gelijkspel
                 if (nextBoard == -1)
                 {
-                    char result = DoFinalMove(board, turn);
+                    char result = DoFinalMove(board);
                     UpdateScores(result, usedXBoards, usedOBoards);
-                    playing = false;
+                    break;
                 }
                 else
                 {
                     board = installer.boards[nextBoard];
-                    turn++;
                     if (turn % 2 == 0)
-                    {
-                        usedOBoards.Add(nextBoard);
-                    }
-                    else
                     {
                         usedXBoards.Add(nextBoard);
                     }
+                    else
+                    {
+                        usedOBoards.Add(nextBoard);
+                    }
+                    turn++;
                 }
             }
         }
@@ -180,18 +166,18 @@ namespace Menace2._0
             //Update de punten voor de gespeelde velden
             if (result == 'N')
             {
-                xScore = 1;
-                oScore = 1;
+                xScore = drawPoints;
+                oScore = drawPoints;
             }
             else if (result == 'X')
             {
-                xScore = 3;
-                oScore = -1;
+                xScore = winPoints;
+                oScore = -losePoints;
             }
             else if (result == 'O')
             {
-                xScore = -1;
-                oScore = 3;
+                xScore = -losePoints;
+                oScore = winPoints;
             }
             foreach (int index in xBoards)
             {
@@ -211,10 +197,10 @@ namespace Menace2._0
             }
         }
 
-        private char DoFinalMove(string board, int turn)
+        public char DoFinalMove(string board)
         {
             char[] b = board.ToCharArray();
-            if (turn == 8) //zet de laatste zet en kijkt dan wie er gewonnen/gelijkspel heeft
+            if (Turn(board) == 8) //zet de laatste zet en kijkt of er een winnaar is
             {
                 for (int i = 0; i < b.Length; i++)
                 {
@@ -225,9 +211,12 @@ namespace Menace2._0
                 }
                 return installer.HasWinner(new string(b));
             }
-            else
+            else if (HasWinningMove(board) > -1)
             {
-                return turn % 2 == 0 ? 'X' : 'O'; //de gene die aan de beurt is gaat sowieso winnen
+                return Turn(board) % 2 == 0 ? 'X' : 'O'; //de gene die aan de beurt is gaat sowieso winnen
+            } else
+            {
+                throw new Exception("Is niet goed.");
             }
         }
     }

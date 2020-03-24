@@ -52,7 +52,7 @@ namespace Menace2._0
                 }
                 //begin met spelposities vinden (probeert alle mogelijkheden d.m.v. backtracking)
                 RecursiveRun(board, 'X', 0, 0);
-                Console.WriteLine("Total generated boards: " + boards.Count);
+                Console.WriteLine("Generated " + boards.Count + " board and " + nextBoardMapping.Count + " next turn mappings.");
                 Save();
             }
         }
@@ -72,16 +72,16 @@ namespace Menace2._0
 
         private void RecursiveRun(char[] board, char pos, int turn, int prevBoardIndex)
         {
-            if (boards.Count == 627 && nextBoardMapping.Count == 577) return;
+            //if (boards.Count == 627 && nextBoardMapping.Count == 577) return;
             for (int i = 0; i < 9; i++)
             {
                 if (board[i] == 'N')
                 {
                     board[i] = pos;
                     turn++;
-                    int existing = Exists(new string(board));
                     if (turn < 9 && HasWinner(new string(board)) == 'N')
                     {
+                        int existing = Exists(new string(board));
                         if (existing == -1)
                         {
                             existing = boards.Count;
@@ -167,6 +167,45 @@ namespace Menace2._0
                 }
             }
             return -1;
+        }
+
+        public string RotateBack(string input, string best)
+        {
+            if (best.Length != 9) return best;
+            string[] combinations = new string[8];
+            combinations[0] = best;
+            combinations[1] = TurnRight(best);
+            combinations[2] = TurnLeft(best);
+            combinations[3] = TurnRight(combinations[1]);
+            combinations[4] = Flip(best);
+            combinations[5] = Flip(combinations[1]);
+            combinations[6] = Flip(combinations[2]);
+            combinations[7] = Flip(combinations[3]);
+
+            int total = 0;
+            foreach (char c in input)
+            {
+                if (c != 'N')
+                {
+                    total++;
+                }
+            }
+            for (int i = 0; i < combinations.Length; i++)
+            {
+                int count = 0;
+                for (int j = 0; j < input.Length; j++)
+                {
+                    if (input[j] != 'N' && combinations[i][j] == input[j])
+                    {
+                        count++;
+                        if (count == total)
+                        {
+                            return combinations[i];
+                        }
+                    }
+                }
+            }
+            return best;
         }
 
         private string TurnLeft(string board)
