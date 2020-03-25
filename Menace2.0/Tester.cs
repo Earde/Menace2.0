@@ -60,7 +60,19 @@ namespace Menace2._0
 
         public bool IsPerfect()
         {
-            return menaceFirst.Last().lose == 0.0 && menaceSecond.Last().lose == 0.0;
+            if (menaceFirst.Last().lose == 0.0 && menaceSecond.Last().lose == 0.0)
+            {
+                int tempTestGames = testGames;
+                testGames = 10000;
+                var perfectRun1 = DoRun(true);
+                var perfectRun2 = DoRun(true);
+                testGames = tempTestGames;
+                if (perfectRun1.lose == 0.0 && perfectRun2.lose == 0.0)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private TestRun DoRun(bool first)

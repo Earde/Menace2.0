@@ -6,8 +6,8 @@ namespace Menace2._0
 {
     class Trainer
     {
-        int winPointsX = 3, losePointsX = -3, drawPointsX = 1;
-        int winPointsO = 1, losePointsO = -1, drawPointsO = 5;
+        int winPointsX = 1, losePointsX = -1, drawPointsX = 0;
+        int winPointsO = 1, losePointsO = -1, drawPointsO = 3;
         private Dictionary<int, int> pointMap = new Dictionary<int, int>();//<index speelbord, score>
 
         public Installer installer;
@@ -71,7 +71,7 @@ namespace Menace2._0
             int index = -1;
             if (print && indexes.Count > 0)
             {
-                Console.WriteLine("NEXT POSSIBLE BOARDS");
+                Console.WriteLine("BOARDS    POINTS");
                 indexes.OrderBy(i => pointMap[i]).ToList().ForEach(ind => Console.WriteLine(this.installer.boards[ind] + " " + pointMap[ind].ToString()));
                 Console.WriteLine(" ");
             }

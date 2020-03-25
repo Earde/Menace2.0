@@ -5,10 +5,11 @@ namespace Menace2._0
     class Program
     {
         static bool doTestRuns = false;
-        static int testGames = 200;
-        static int runTestEveryXGames = 10;
+        static bool tryIsPerfect = false;
+        static int testGames = 500;
+        static int runTestEveryXGames = 100;
 
-        static int trainGames = 5000;
+        static int trainGames = 10000;
         static bool printTrainOutput = false;
 
         static void Main(string[] args)
@@ -30,11 +31,17 @@ namespace Menace2._0
             if (get.ToLower().Equals("y"))
             {
                 doTestRuns = true;
+                Console.Write("Do you wish to stop training if player 1 and 2 don't lose for more than 10.000 games in a row? (y/n): ");
+                get = Console.ReadLine();
+                if (get.ToLower().Equals("y"))
+                {
+                    tryIsPerfect = true;
+                }
             }
             if (doTestRuns)
             {
-                Console.WriteLine("Every " + runTestEveryXGames.ToString() + " train games run " + testGames.ToString() + " test games.");
-                Console.WriteLine("Running a total of " + (trainGames * (testGames / runTestEveryXGames)).ToString() + " games...");
+                Console.WriteLine("Every " + runTestEveryXGames.ToString() + " train games run " + (testGames * 2).ToString() + " test games.");
+                Console.WriteLine("Running a total of " + (trainGames * (testGames * 2 / runTestEveryXGames)).ToString() + " games...");
                 tester.Run();
             }
             int loading = 0;
@@ -55,6 +62,11 @@ namespace Menace2._0
                     if (i % runTestEveryXGames == 0)
                     {
                         tester.Run();
+                    }
+                    if (tryIsPerfect && tester.IsPerfect())
+                    {
+                        Console.WriteLine("Perfect Solution Found");
+                        break;
                     }
                 }
             }
